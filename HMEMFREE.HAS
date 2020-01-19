@@ -1,0 +1,234 @@
+	.include	doscall.mac
+
+
+* ------ メッセージ表示マクロ ------------------
+print:		macro	msg
+		pea	msg
+		DOS	__PRINT
+		add.l	#4,sp
+		endm
+
+* ------ ハイメモリ IOCS コールマクロ ----------
+HM_IOCS:	macro	func
+		moveq.l	#himem_iocs,d0
+		moveq.l	#func,d1
+		trap	#15
+		endm
+
+
+* ----- ハイメモリ IOCS コール -----------------
+himem_iocs 	equ	$f8
+
+h_alloc		equ	1
+h_free		equ	2
+h_getsize	equ	3
+
+
+* ------ 文字コード ----------------------------
+TAB	equ	$09
+LF	equ	$0A
+CR	equ	$0D
+
+	.text
+
+	.68000
+
+main:
+	clr.l	-(sp)			; himem.sys の常駐確認
+	DOS	__SUPER
+	addq.l	#4,sp
+
+	move.l	d0,d7
+	move.l	#himem_iocs,d1
+	lsl.l	#2,d1
+	add.l	#$400,d1
+	move.l	d1,a0
+	move.l	(a0),a0
+	lea	-6(a0),a0
+	move.l	(a0)+,d0
+	cmp.l	#'HIME',d0
+	bne	not_himem
+	
+	move.w	(a0)+,d0
+	cmp.w	#'M'*256,d0
+	bne	not_himem
+
+	move.l	d7,-(sp)
+	DOS	__SUPER
+	addq.l	#4,sp
+
+
+* ----- start ----------------------------------
+	print	msg03(pc)
+	HM_IOCS	h_getsize
+	exg	d0,d1
+	bsr	print_dec
+	print	msg01(pc)
+
+	print	msg03(pc)
+	exg	d0,d1
+	bsr	print_dec
+	print	msg02(pc)
+
+	DOS	__EXIT
+
+not_himem:
+	Print	msg00(pc)
+
+	DOS	__EXIT
+
+* ----- sub routin -----------------------------
+*
+*	（入力）
+*		d0.l	表示する値
+*
+print_dec:
+	move.l	d1,-(sp)
+
+	lea.l	msg04,a0
+	clr.w	d2
+
+	clr.l	d1
+@@:	addq.w	#1,d1
+	sub.l	#10000000,d0
+	bpl	@b
+	add.l	#10000000,d0
+	subq.w	#1,d1
+	beq	@f
+	moveq.l	#1,d2
+	add.w	#'0',d1
+	move.b	d1,(a0)+
+
+@@:
+	clr.l	d1
+@@:	addq.w	#1,d1
+	sub.l	#1000000,d0
+	bpl	@b
+	add.l	#1000000,d0
+	subq.w	#1,d1
+	tst.w	d2
+	bne	1f
+	tst.w	d1
+	beq	@f
+1:	moveq.l	#1,d2
+	add.w	#'0',d1
+	move.b	d1,(a0)+
+
+@@:	move.l	a0,d1
+	cmp.l	#msg04,d1
+	beq	@f
+	move.b	#',',(a0)+
+
+@@:
+	clr.l	d1
+@@:	addq.w	#1,d1
+	sub.l	#100000,d0
+	bpl	@b
+	add.l	#100000,d0
+	subq.w	#1,d1
+	tst.w	d2
+	bne	1f
+	tst.w	d1
+	beq	@f
+1:	moveq.l	#1,d2
+	add.w	#'0',d1
+	move.b	d1,(a0)+
+
+@@:
+	clr.l	d1
+@@:	addq.w	#1,d1
+	sub.l	#10000,d0
+	bpl	@b
+	add.l	#10000,d0
+	subq.w	#1,d1
+	tst.w	d2
+	bne	1f
+	tst.w	d1
+	beq	@f
+1:	moveq.l	#1,d2
+	add.w	#'0',d1
+	move.b	d1,(a0)+
+
+@@:
+	clr.l	d1
+@@:	addq.w	#1,d1
+	sub.l	#1000,d0
+	bpl	@b
+	add.l	#1000,d0
+	subq.w	#1,d1
+	tst.w	d2
+	bne	1f
+	tst.w	d1
+	beq	@f
+1:	moveq.l	#1,d2
+	add.w	#'0',d1
+	move.b	d1,(a0)+
+
+@@:	move.l	a0,d1
+	cmp.l	#msg04,d1
+	beq	@f
+	move.b	#',',(a0)+
+
+	clr.l	d1
+@@:	addq.w	#1,d1
+	sub.l	#100,d0
+	bpl	@b
+	add.l	#100,d0
+	subq.w	#1,d1
+	tst.w	d2
+	bne	1f
+	tst.w	d1
+	beq	@f
+1:	moveq.l	#1,d2
+	add.w	#'0',d1
+	move.b	d1,(a0)+
+
+@@:
+	clr.l	d1
+@@:	addq.w	#1,d1
+	sub.l	#10,d0
+	bpl	@b
+	add.l	#10,d0
+	subq.w	#1,d1
+	tst.w	d2
+	bne	1f
+	tst.w	d1
+	beq	@f
+1:	moveq.l	#1,d2
+	add.w	#'0',d1
+	move.b	d1,(a0)+
+
+@@:
+	clr.l	d1
+@@:	addq.w	#1,d1
+	subq.l	#1,d0
+	bpl	@b
+	addq.l	#1,d0
+	subq.w	#1,d1
+	tst.w	d2
+	bne	1f
+	tst.w	d1
+	beq	@f
+1:	moveq.l	#1,d2
+	add.w	#'0',d1
+	move.b	d1,(a0)+
+
+@@:
+	move.b	#0,(a0)+
+
+	print	msg04(pc)
+
+	move.l	(sp)+,d1
+
+	rts
+
+msg00:	.dc.b	'himem.sys またはその互換ドライバが常駐してません。',CR,LF,0
+msg01:	.dc.b	'バイト: 最大使用可能ハイメモリ',CR,LF,0
+msg02:	.dc.b	'バイト: 全体使用可能ハイメモリ',CR,LF,0
+msg03:	.dc.b	'   ',0
+msg04:	.dc.b	'00,000,000',0
+
+	.even
+
+	.end	main
+

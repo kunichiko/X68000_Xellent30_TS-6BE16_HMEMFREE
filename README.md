@@ -1,4 +1,4 @@
-# X68000_Xellent30_TS-6BE16_HMEMFREE
+# About HMEMFREE.x for Xellent30 + TS-6BE16
 
 This tool shows the memory usage of TS-6BE16 memory board which made for Xellent 30 (for XVI).
 Xellent 30 (XVI) 用のメモリボードである TS-6BE16のメモリ使用状況を表示するツールです。
